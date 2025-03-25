@@ -8,15 +8,15 @@ import java.util.Scanner;
 
 
 public class Main {
-    private static final Logger logger = LogManager.getLogger(Main.class);
+    private static final Logger log = LogManager.getLogger(Main.class);
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
-        logger.info("Enter length:");
+        log.info("Enter length:");
         String[] inputValues = scanner.nextLine().split(" ");
         int length = Integer.parseInt(inputValues[0]);
         int width = (inputValues.length > 1) ? Integer.parseInt(inputValues[1]) : length;
-        logger.info("Created field of size {}", length);
+        log.info("Created field of size {}", length);
 
         Table table = new Table(length,width);
         long startTime = System.currentTimeMillis();
@@ -26,7 +26,7 @@ public class Main {
 
 
         long endTime = System.currentTimeMillis();
-        logger.info("Execution time: {} ms", endTime - startTime);
+        log.info("Execution time: {} ms", endTime - startTime);
     }
 
 

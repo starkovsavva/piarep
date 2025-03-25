@@ -16,6 +16,7 @@ public class Table {
     private int filledSquares;
     private boolean engagedPlaces[][];
     private int squaresMin = Integer.MAX_VALUE;
+    private int variantsMinSquares = 0;
 
     public int getSquaresMin() {
         return squaresMin;
@@ -76,6 +77,7 @@ public class Table {
         log.info("Starting field solution...");
         backtrack(new ArrayList<>(), 0,0);
         log.info("Min square count: {}", squaresMin);
+        log.info("Variants min squares: {}", variantsMinSquares);
 
     }
 
@@ -104,8 +106,11 @@ public class Table {
         int possibleMinSize = (int) Math.ceil((double) areaThatRemaining / (possibleSizeMax * possibleSizeMax));
 
 
+        log.info(">>> {}{} Found variant with min square {}",depthOfRecursion, "-".repeat(depthOfRecursion),possibleMinSize);
+
         //predict
         if (alreadyUsed + possibleMinSize >= squaresMin) {
+            variantsMinSquares = variantsMinSquares+1;
             return;
         }
 
