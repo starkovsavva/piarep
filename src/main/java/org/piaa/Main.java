@@ -29,7 +29,7 @@ public class Main {
 
         long endTime = System.currentTimeMillis();
         long duration = endTime - startTime;
-        System.out.println("Время выполнения: " + duration / 1000 + " с");
+        System.out.println("Время выполнения: " + duration  + "мс");
     }
 
 

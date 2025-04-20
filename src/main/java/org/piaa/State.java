@@ -12,23 +12,32 @@ public class State implements Comparable<State> {
     List<Integer> path; // Текущий частичный путь
     boolean[] visited; // Посещенные города
     int n; // количество дорог?
-    double cost; // Текущая стоимость пути
-    double lowerBound; // Нижняя оценка стоимости
-    double priority;
+    int cost; // Текущая стоимость пути
+    int lowerBound; // Нижняя оценка стоимости
+    int priority;
 
-    public State(int [][] costMatrix,List<Integer> path, boolean[] visited, double cost,int n) {
+    public State(int [][] costMatrix,List<Integer> path, boolean[] visited) {
         this.costMatrix = costMatrix;
         this.path = new ArrayList<>(path);
         this.visited = Arrays.copyOf(visited, visited.length);
-        this.cost = cost;
-        this.n = n; // кол-во городов
+        this.cost = calculateCost(path);
+        this.n = costMatrix.length - 1; // кол-во городов
         this.lowerBound = cost + calculateLowerBound(); // Вычисляем нижнюю оценку
         this.priority = calculatePriority();
     }
-    private double calculatePriority() {
+    private int calculatePriority() {
         int k = Math.max(path.size() - 1, 1);
         int L = path.size();
-        return (cost / k + (double) L / n) * (4.0 * n / (3.0 * n + k));
+        return (cost / k +  L / n) * (4 * n / (3 * n + k));
+    }
+    public int calculateCost(List<Integer> path) {
+        int total = 0;
+        int size = (path == null) ? 1: path.size();
+
+        for (int i = 0; i < path.size() - 1; i++) {
+            total += costMatrix[path.get(i)][path.get(i + 1)];
+        }
+        return total;
     }
 
     @Override
@@ -60,20 +69,20 @@ public class State implements Comparable<State> {
      * 1. Полусумма минимальных входящих/исходящих ребер для всех кусков.
      * 2. Вес минимального остовного дерева (МОД) для допустимых ребер.
      */
-    private double calculateLowerBound() {
+    private int calculateLowerBound() {
 
 
 
         // TODO: Реализовать вычисление оценок согласно варианту 4
-        double sumMinEdges = calculateHalfSum(); // Полусумма ребер
+        int sumMinEdges = (path.size() > 1) ? calculateHalfSumMinEdges() : 0; // Полусумма ребер
         log.info("--- sumMinEdges : " + sumMinEdges);
 
-        double mstWeight = calculateMST(); // Вес МОД
+        int mstWeight = calculateMST(); // Вес МОД
         log.info("--- mstWeight : " + mstWeight);
         return Math.max(sumMinEdges, mstWeight);
     }
 
-    private double calculateMST() {
+    private int calculateMST() {
         int startVertex = path.get(0);
         int currentVertex = path.get(path.size() - 1);
         Set<Integer> visited = new HashSet<>(path);
@@ -103,12 +112,45 @@ public class State implements Comparable<State> {
 
         }
 
-        return inMST.size() == n - visited.size() + 1 ? weight : Double.MAX_VALUE;
+        return inMST.size() == n - visited.size() + 1 ? weight : Integer.MAX_VALUE;
 
     }
 
-    private double calculateHalfSum() {
-        double sum = 0;
+    public int calculateHalfSumMinEdges() {
+        int sum = 0;
+        int startVertex = path.get(0);
+        Set<Integer> visited = new HashSet<>(path);
+        for (int i = 0; i < n; i++) {
+            if (visited.contains(i) && i != startVertex) {
+                continue;
+            }
+
+            // Фильтрация допустимых рёбер
+            List<Integer> edges = new ArrayList<>();
+            for (int j = 0; j < n; j++) {
+
+                if (costMatrix[i][j] != -1) {
+
+                    edges.add(costMatrix[i][j]);
+                    log.info("edge " + i + " " + j + " : " + costMatrix[i][j]);
+                }
+            }
+
+            // Сортировка и вычисление суммы
+            Collections.sort(edges);
+            if (edges.isEmpty()) {
+                return Integer.MAX_VALUE;
+            } else if (edges.size() == 1) {
+                sum += edges.get(0);
+            } else {
+                sum += (edges.get(0) + edges.get(1)) / 2;
+            }
+        }
+        return sum;
+    }
+
+    private int calculateHalfSum() {
+        int sum = 0;
         int startVertex = path.get(0);
         Set<Integer> visited = new HashSet<>(path);
         Set<Integer> components = getComponents(visited);
@@ -122,7 +164,7 @@ public class State implements Comparable<State> {
 
     private Set<Integer> getComponents(Set<Integer> visited) {
         Set<Integer> comps = new HashSet<>();
-        comps.add(-1); // Текущий путь как компонента -1
+        comps.add(0); // Текущий путь как компонента -1
         for (int i = 0; i < n; i++) {
             if (!visited.contains(i)) comps.add(i);
         }
@@ -141,13 +183,13 @@ public class State implements Comparable<State> {
         for (int node : nodes) {
             // Минимальное входящее ребро
             for (int i = 0; i < n; i++) {
-                if (!visited.contains(i) && costMatrix[i][node] != Integer.MAX_VALUE) {
+                if (!visited.contains(i) && costMatrix[i][node] != -1) {
                     minIn = Math.min(minIn, costMatrix[i][node]);
                 }
             }
             // Минимальное исходящее ребро
             for (int j = 0; j < n; j++) {
-                if (!visited.contains(j) && costMatrix[node][j] != Integer.MAX_VALUE) {
+                if (!visited.contains(j) && costMatrix[node][j] != -1) {
                     minOut = Math.min(minOut, costMatrix[node][j]);
                 }
             }

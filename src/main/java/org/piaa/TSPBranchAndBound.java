@@ -26,7 +26,7 @@ public class TSPBranchAndBound {
         initialPath.add(0);
         boolean[] visited = new boolean[cost.length];
         visited[0] = true;
-        statePriorityQueue.add(new State(costMatrix,initialPath, visited, 0,n));
+        statePriorityQueue.add(new State(costMatrix,initialPath, visited));
 
 
         while (!statePriorityQueue.isEmpty()) {
@@ -72,7 +72,7 @@ public class TSPBranchAndBound {
                     newVisited[next] = true;
                     double newCost = current.cost + cost[current.path.get(current.path.size()-1)][next];
 
-                    State newState = new State(costMatrix,newPath, newVisited, newCost,n);
+                    State newState = new State(costMatrix,newPath, newVisited);
 
                     log.info("---- newState : " + newState.toString());
                     log.info("---- lowerBound : " + newState.lowerBound);
