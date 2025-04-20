@@ -3,30 +3,33 @@ package org.piaa;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.List;
 import java.util.Scanner;
 
 
 public class Main {
     private static final Logger log = LogManager.getLogger(Main.class);
 
+
+    private static TSPBranchAndBound tspBranchAndBound = new TSPBranchAndBound();
     public static void main(String[] args) {
+
+
         Scanner scanner = new Scanner(System.in);
         log.info("Enter length:");
-        String[] inputValues = scanner.nextLine().split(" ");
-        int length = Integer.parseInt(inputValues[0]);
-        int width = (inputValues.length > 1) ? Integer.parseInt(inputValues[1]) : length;
-        log.info("Created field of size {}", length);
-
-        Table table = new Table(length,width);
+        int n = scanner.nextInt();
+        int[][] matrix = new int[n][n];
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                matrix[i][j] = scanner.nextInt();
+            }
+        }
         long startTime = System.currentTimeMillis();
-        table.solve();
-        printBestSolution(table.getBestSolution());
-        System.out.println( "  ---------- The best solution! -----------  \n"+ table.getBestSolution());
-
+        tspBranchAndBound.setNandMatrix(n, matrix);
+        tspBranchAndBound.solve(matrix);
 
         long endTime = System.currentTimeMillis();
-        log.info("Execution time: {} ms", endTime - startTime);
+        long duration = endTime - startTime;
+        System.out.println("Время выполнения: " + duration / 1000 + " с");
     }
 
 
@@ -63,12 +66,12 @@ public class Main {
 //        }
 //    }
 
-    public static void printBestSolution(List<Square> bestSolution) {
-
-        for (Square solution : bestSolution) {
-            System.out.println(solution.getX() + " " + solution.getY() + " " + solution.getLength());
-        }
-    }
-
+//    public static void printBestSolution(List<Square> bestSolution) {
+//
+//        for (Square solution : bestSolution) {
+//            System.out.println(solution.getX() + " " + solution.getY() + " " + solution.getLength());
+//        }
+//    }
+//
 
 }
