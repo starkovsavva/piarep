@@ -8,22 +8,27 @@ import java.util.*;
 public class State implements Comparable<State> {
     private static final Logger log = LogManager.getLogger(State.class);
     int[][] costMatrix;
+    private double cachedPriority;
 
-    List<Integer> path; // Текущий частичный путь
+    public ArrayList<Integer> path; // Текущий частичный путь
     boolean[] visited; // Посещенные города
     int n; // количество дорог?
     int cost; // Текущая стоимость пути
     int lowerBound; // Нижняя оценка стоимости
-    int priority;
+    double priority;
 
+    public double getPriority() {
+        return cachedPriority;
+    }
     public State(int [][] costMatrix,List<Integer> path, boolean[] visited) {
         this.costMatrix = costMatrix;
         this.path = new ArrayList<>(path);
         this.visited = Arrays.copyOf(visited, visited.length);
         this.cost = calculateCost(path);
         this.n = costMatrix.length - 1; // кол-во городов
-        this.lowerBound = cost + calculateLowerBound(); // Вычисляем нижнюю оценку
+        this.lowerBound =  cost + calculateLowerBound(); // Вычисляем нижнюю оценку
         this.priority = calculatePriority();
+        this.cachedPriority = calculatePriority();
     }
     private int calculatePriority() {
         int k = Math.max(path.size() - 1, 1);
@@ -74,7 +79,7 @@ public class State implements Comparable<State> {
 
 
         // TODO: Реализовать вычисление оценок согласно варианту 4
-        int sumMinEdges = (path.size() > 1) ? calculateHalfSumMinEdges() : 0; // Полусумма ребер
+        int sumMinEdges = calculateHalfSumMinEdges() ; // Полусумма ребер
         log.info("--- sumMinEdges : " + sumMinEdges);
 
         int mstWeight = calculateMST(); // Вес МОД
@@ -118,36 +123,51 @@ public class State implements Comparable<State> {
 
     public int calculateHalfSumMinEdges() {
         int sum = 0;
-        int startVertex = path.get(0);
-        Set<Integer> visited = new HashSet<>(path);
-        for (int i = 0; i < n; i++) {
-            if (visited.contains(i) && i != startVertex) {
-                continue;
+        int startVertex = path.size() > 1 ?  0: path.get(0) ; // null
+        int endVertex = path.size() > 1 ? 0 : path.get(path.size() - 1) ; // null
+        TreeSet<Integer> chunksIn = new TreeSet<>();// [0 , 1] (0, 1)
+        TreeSet<Integer> chunksOut = new TreeSet<>();// [0 , 1] (0, 1)
+
+        int minIn = 0;
+        int minOut = 0;
+        if (path.size() > 1) {
+
+            for (int j = 0; j < n + 1; j++) {
+                if(visited[j] != true && costMatrix[endVertex][j] != -1) {
+                    chunksOut.add(costMatrix[endVertex][j]);
+                }
             }
+            for (int j = 0; j < n + 1; j++) {
 
-            // Фильтрация допустимых рёбер
-            List<Integer> edges = new ArrayList<>();
-            for (int j = 0; j < n; j++) {
-
-                if (costMatrix[i][j] != -1) {
-
-                    edges.add(costMatrix[i][j]);
-                    log.info("edge " + i + " " + j + " : " + costMatrix[i][j]);
+                if(costMatrix[endVertex][j] != -1){
+                    chunksIn.add(costMatrix[startVertex][j]);
                 }
             }
 
-            // Сортировка и вычисление суммы
-            Collections.sort(edges);
-            if (edges.isEmpty()) {
-                return Integer.MAX_VALUE;
-            } else if (edges.size() == 1) {
-                sum += edges.get(0);
-            } else {
-                sum += (edges.get(0) + edges.get(1)) / 2;
+        }
+        else{
+            for ( int j = 0; j < n + 1  ; j++) {
+                if(costMatrix[0][j] != -1){
+                    chunksOut.add(costMatrix[0][j]);
+
+                }
+            }
+            for (int j = 0; j < n + 1; j++) {
+                if (costMatrix[j][0] != -1){
+                    chunksIn.add(costMatrix[j][0]);
+
+                }
             }
         }
+        Integer minOutInt1 = chunksOut.size() > 0 ? chunksOut.first(): 0;
+        Integer minOutInt2 = chunksOut.size() >= 2 ?  chunksOut.higher(minOutInt1): 0;
+        Integer minInInt1 = chunksIn.size() > 0? chunksIn.first() : 0;
+        Integer minInInt2 =  chunksIn.size()  >= 2 ?  chunksIn.higher(minInInt1): 0;
+        sum = ((minInInt1 + minInInt2) + (minOutInt2 + minOutInt1))/2;
+
         return sum;
     }
+
 
     private int calculateHalfSum() {
         int sum = 0;
