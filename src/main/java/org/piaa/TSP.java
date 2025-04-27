@@ -1,5 +1,4 @@
 package org.piaa;
-import javax.sound.midi.Soundbank;
 import java.util.*;
 
 public class TSP {
@@ -17,14 +16,7 @@ public class TSP {
         this.visited = new boolean[n];
     }
 
-    /**
-     * Улучшенный алгоритм вставки (АВБГ) для построения начального пути.
-     * Выбирает город и позицию вставки, минимизируя значение I + O - R,
-     * где:
-     * I - стоимость входящего ребра,
-     * O - стоимость исходящего ребра,
-     * R - стоимость заменяемого ребра.
-     */
+
     public List<Integer> improvedAVBG() {
         path.add(0); // Начинаем с города 0 (по условию варианта)
         visited[0] = true;
@@ -37,13 +29,15 @@ public class TSP {
             // Перебираем все города
             for (int city = 0; city < n; city++) {
                 if (visited[city]) continue; // Пропускаем уже посещенные
-
+                System.out.println("Проверяем что можно вставить город : " + city);
                 // Проверяем все возможные позиции для вставки
                 for (int pos = 1; pos <= path.size(); pos++) {
-
+                    System.out.println("-Проверяем позицию " + pos + " для города " + city);
                     // Определяем предыдущий и следующий города в текущем пути
                     int prev = (pos == 0) ? -1 : path.get(pos - 1);
+                    System.out.println("Пытаемся вычислить prev " + prev);
                     int next = (pos == path.size()) ? -1 : path.get(pos);
+                    System.out.println("Пытаемся вычислить next " + next);
 
                     // Вычисляем стоимости
                     int I = (prev == -1) ? 0 : cost[prev][city]; // Входящее ребро
@@ -55,8 +49,9 @@ public class TSP {
                     // Вычисляем приращение стоимости
                     double increase = I + O - R;
                     // Обновляем лучший выбор
-
+                    System.out.println("Пытаемся обновить лучший выбор - increase: "+ increase + " mincrease: " + minIncrease);
                     if (increase < minIncrease ) {
+                        System.out.println("Обновленные данные: mincrease " + minIncrease  + " bestCity: " + bestCity + " bestPos: " + bestPos);
                         minIncrease = increase;
                         bestCity = city;
                         bestPos = pos;
@@ -69,37 +64,23 @@ public class TSP {
                 visited[bestCity] = true;
             }
         }
+        System.out.println("Оптимальный путь: " + path);
+        System.out.println("Лучшая цена: "  + calculateCost(path));
         return path;
     }
+    public int calculateCost(List<Integer> path) {
+        int total = 0;
+        int size = (path == null) ? 1: path.size();
 
-    /**
-     * Вычисляет общую стоимость пути, включая возврат в начальный город.
-     */
-//    public double calculateCost(List<Integer> path) {
-//        double total = 0;
-//        int size = path.size()  == null ? 0:;
-//
-//        for (int i = 0; i < path.size() - 1; i++) {
-//            total += cost[path.get(i)][path.get(i + 1)];
-//        }
-//        total += cost[path.get(path.size() - 1)][path.get(0)]; // Возврат в начало
-//        return total;
-//    }
+        if (path.size() > 1) {
 
-//    public static void main(String[] args) {
-//        Scanner scanner = new Scanner(System.in);
-//        int n = scanner.nextInt();
-//        int[][] cost = new int[n][n];
-//        for (int i = 0; i < n; i++) {
-//            for (int j = 0; j < n; j++) {
-//                cost[i][j] = scanner.nextInt();
-//            }
-//        }
-//
-//        TSP solver = new TSP(cost);
-//        List<Integer> path = solver.improvedAVBG();
-//        // Форматируем вывод пути
-//        System.out.println(path.toString().replaceAll("[\\[\\],]", ""));
-//        System.out.println(solver.calculateCost(path));
+            for (int i = 0; i < path.size() - 1; i++) {
+                total += cost[path.get(i)][path.get(i + 1)];
+            }
+            total += cost[0][path.size() - 1];
+        }
+
+
+        return total;
     }
-//}
+    }

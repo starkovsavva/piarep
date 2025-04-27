@@ -8,7 +8,6 @@ import java.util.*;
 public class State implements Comparable<State> {
     private static final Logger log = LogManager.getLogger(State.class);
     int[][] costMatrix;
-    private double cachedPriority;
 
     public ArrayList<Integer> path; // Текущий частичный путь
     boolean[] visited; // Посещенные города
@@ -17,9 +16,6 @@ public class State implements Comparable<State> {
     int lowerBound; // Нижняя оценка стоимости
     double priority;
 
-    public double getPriority() {
-        return cachedPriority;
-    }
     public State(int [][] costMatrix,List<Integer> path, boolean[] visited) {
         this.costMatrix = costMatrix;
         this.path = new ArrayList<>(path);
@@ -28,20 +24,34 @@ public class State implements Comparable<State> {
         this.n = costMatrix.length - 1; // кол-во городов
         this.lowerBound =  cost + calculateLowerBound(); // Вычисляем нижнюю оценку
         this.priority = calculatePriority();
-        this.cachedPriority = calculatePriority();
     }
-    private int calculatePriority() {
-        int k = Math.max(path.size() - 1, 1);
-        int L = path.size();
-        return (cost / k +  L / n) * (4 * n / (3 * n + k));
+    private double calculatePriority() {
+        int k = path.size() - 1; // Количество дуг (рёбер)
+        int N = n; // Общее количество городов
+
+        // S - текущая стоимость пути
+        double S = cost;
+
+        // L - нижняя оценка остатка пути (lowerBound - S)
+        double L = lowerBound - S;
+
+        // Формула антиприоритета из варианта 4
+        double denominator = 0.5 * N + k;
+        double priority = (S + L) / denominator;
+
+        return priority;
     }
     public int calculateCost(List<Integer> path) {
         int total = 0;
         int size = (path == null) ? 1: path.size();
 
-        for (int i = 0; i < path.size() - 1; i++) {
-            total += costMatrix[path.get(i)][path.get(i + 1)];
+        if (path.size() > 1) {
+
+            for (int i = 0; i < path.size() - 1; i++) {
+                total += costMatrix[path.get(i)][path.get(i + 1)];
+            }
         }
+
         return total;
     }
 
@@ -69,22 +79,17 @@ public class State implements Comparable<State> {
     }
 
 
-    /**
-     * Вычисляет нижнюю оценку как максимум из двух значений:
-     * 1. Полусумма минимальных входящих/исходящих ребер для всех кусков.
-     * 2. Вес минимального остовного дерева (МОД) для допустимых ребер.
-     */
     private int calculateLowerBound() {
 
 
 
-        // TODO: Реализовать вычисление оценок согласно варианту 4
         int sumMinEdges = calculateHalfSumMinEdges() ; // Полусумма ребер
         log.info("--- sumMinEdges : " + sumMinEdges);
 
         int mstWeight = calculateMST(); // Вес МОД
         log.info("--- mstWeight : " + mstWeight);
         return Math.max(sumMinEdges, mstWeight);
+
     }
 
     private int calculateMST() {
@@ -139,7 +144,7 @@ public class State implements Comparable<State> {
             }
             for (int j = 0; j < n + 1; j++) {
 
-                if(costMatrix[endVertex][j] != -1){
+                if(costMatrix[startVertex][j] != -1){
                     chunksIn.add(costMatrix[startVertex][j]);
                 }
             }
@@ -166,55 +171,6 @@ public class State implements Comparable<State> {
         sum = ((minInInt1 + minInInt2) + (minOutInt2 + minOutInt1))/2;
 
         return sum;
-    }
-
-
-    private int calculateHalfSum() {
-        int sum = 0;
-        int startVertex = path.get(0);
-        Set<Integer> visited = new HashSet<>(path);
-        Set<Integer> components = getComponents(visited);
-
-        for (int comp : components) {
-            List<Integer> nodes = getNodesInComponent(comp);
-            sum += calculateMinEdgesForComponent(nodes, visited);
-        }
-        return sum / 2;
-    }
-
-    private Set<Integer> getComponents(Set<Integer> visited) {
-        Set<Integer> comps = new HashSet<>();
-        comps.add(0); // Текущий путь как компонента -1
-        for (int i = 0; i < n; i++) {
-            if (!visited.contains(i)) comps.add(i);
-        }
-        return comps;
-    }
-
-    private List<Integer> getNodesInComponent(int comp) {
-        return (comp == -1) ? path : Collections.singletonList(comp);
-    }
-
-    private double calculateMinEdgesForComponent(List<Integer> nodes, Set<Integer> visited) {
-        int minIn = Integer.MAX_VALUE;
-        int minOut = Integer.MAX_VALUE;
-        int startVertex = path.get(0);
-
-        for (int node : nodes) {
-            // Минимальное входящее ребро
-            for (int i = 0; i < n; i++) {
-                if (!visited.contains(i) && costMatrix[i][node] != -1) {
-                    minIn = Math.min(minIn, costMatrix[i][node]);
-                }
-            }
-            // Минимальное исходящее ребро
-            for (int j = 0; j < n; j++) {
-                if (!visited.contains(j) && costMatrix[node][j] != -1) {
-                    minOut = Math.min(minOut, costMatrix[node][j]);
-                }
-            }
-        }
-        return (minIn + minOut);
     }
 
     @Override
