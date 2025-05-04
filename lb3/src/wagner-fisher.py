@@ -77,6 +77,8 @@ def calculate_cell(dp, i, j, A, B, price):
 
     return min_cost, operation
 
+def measure_price(dp):
+    return dp[len(dp)-1][len(dp[0])-1]
 
 def fill_dp_matrix(dp, backtrack, A, B, price):
     """Заполняет основную матрицу DP"""
@@ -146,6 +148,7 @@ def main():
     operations = recover_operations(backtrack, A, B)
 
     # 5. Вывод результатов
+    print(measure_price(dp))
     print(operations)
     print(A)
     print(B)
